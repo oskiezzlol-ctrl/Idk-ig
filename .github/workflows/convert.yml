@@ -1,0 +1,58 @@
+name: Convert Video
+run-name: Convert a video file to a bax
+on: 
+  workflow_dispatch:
+    inputs:
+      download_url:
+        description: 'Video Direct Download URL'
+        required: true
+        type: string
+      screen:
+        description: 'Screens to display the video on'
+        required: true
+        type: choice
+        options: 
+        - Top
+        - Bottom
+        - Both
+      background:
+        description: 'Background color in hex'
+        required: true
+        type: string
+        default: "000000"
+      maxtime:
+        description: 'Maximum time in seconds of the converted video'
+        required: true
+        type: string
+        default: "10"
+jobs:
+  convert_video:
+    runs-on: windows-latest
+    steps:
+
+    - name: BaxConverter cache
+      id: baxconverter
+      uses: actions/cache@v3
+      with:
+        path: BaxConverter.exe
+        key: baxconverter
+
+    - name: Download BaxConverter
+      id: download
+      if: steps.baxconverter.outputs.cache-hit != 'true'
+      run: pwsh /c invoke-webrequest -outfile BaxConverter.zip https://github.com/MechanicalDragon0687/BaxConverter/releases/latest/download/BaxConverter.zip && unzip BaxConverter.zip 
+
+    - name: Download video from url
+      id: download-video
+      run: pwsh /c invoke-webrequest -outfile videofile.vid "${{ inputs.download_url }}"
+
+    - name: Convert Video
+      run: pwsh /c ./BaxConverter.exe -i videofile.vid -s "${{ inputs.screen }}" -t $(("${{ inputs.maxtime }}" -replace "[^0-9]*","").PadLeft(1,"0")) -b $($null=("${{ inputs.background }}" -replace '[^0-9A-F]','').PadLeft(6,'0') -match ".*(.{6})$";  echo $matches.1)
+
+    - name: Package output to artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Bax Video
+        path: videofile.bax
+        if-no-files-found: error
+        retention-days: 1
