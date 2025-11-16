@@ -32,7 +32,7 @@ jobs:
 
     - name: BaxConverter cache
       id: baxconverter
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: BaxConverter.exe
         key: baxconverter
@@ -50,7 +50,7 @@ jobs:
       run: pwsh /c ./BaxConverter.exe -i videofile.vid -s "${{ inputs.screen }}" -t $(("${{ inputs.maxtime }}" -replace "[^0-9]*","").PadLeft(1,"0")) -b $($null=("${{ inputs.background }}" -replace '[^0-9A-F]','').PadLeft(6,'0') -match ".*(.{6})$";  echo $matches.1)
 
     - name: Package output to artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Bax Video
         path: videofile.bax
